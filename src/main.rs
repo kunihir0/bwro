@@ -1,6 +1,6 @@
 use seahorse::{error::FlagError, App, Command, Context, Flag, FlagType};
-use std::env;
-use std::fs;
+use std::{env, path::Path, panic, fs, io};
+
 
 fn main() {
 	let args: Vec<String> = env::args().collect();
@@ -18,7 +18,7 @@ fn path_action(c: &Context) {
 	/* get path value */
 	match c.string_flag("path") {
 		Ok(p) => {
-			print!("f");
+			get_files(p);
 		}
 		Err(e) => match e {
 			FlagError::Undefined => panic!("path undefined..."),
@@ -31,9 +31,35 @@ fn path_action(c: &Context) {
 }
 
 fn path_command() -> Command {
-	Command::new("path")
-		.description("Path to folder")
-		.alias("p")
-		.usage("bwro -p [path]")
+	Command::new("config")
+		.description("configure program")
+		.alias("c")
+		.usage("bwro config [path...]")
 		.action(path_action)
+		.flag(
+			Flag::new("path", FlagType::String)
+				.description("path to directory")
+				.alias("p")
+		)
+}
+
+fn get_files(d: String) -> io::Result<()> {
+	if Path::new(&d).exists() {
+		/* populate folders into array same with files */
+		for p in fs::read_dir(&d)? {
+			let path = p?.path();
+			let p_str = path.to_str();
+			set_files(p_str.unwrap().to_string());
+		}
+
+	} else {
+		panic!("doesn't exist");
+	}
+	Ok(())
+}
+
+
+fn set_files(file: String) {
+	let mut files = Vec::new();
+	files.push(file);
 }
